@@ -1,0 +1,19 @@
+.say_as{
+    color:green;
+}
+.emphasis{
+    color:yellow;
+}
+.prosody{
+    color:blue
+}
+.break{
+    color: red;
+    background-color: red;
+}
+.audio{
+    color:blueviolet;
+}
+.paragraph{
+    color: aqua;
+}
