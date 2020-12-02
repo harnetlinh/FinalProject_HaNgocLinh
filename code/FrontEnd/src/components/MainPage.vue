@@ -30,7 +30,6 @@
                                 theme:isReady?'rgb(65, 184, 131)':'tomato'
                               }"
                             />
-                              <!-- <span>"Wisdom is not a product from school, but a lifelong learning process." <br> "Trí tuệ không phải là một sản phẩm từ trường học, mà là một quá trình học tập suốt đời."</span> -->
                           </div>
                           <div class="text-center" style="margin-left:20px">
                               <b-button size="h1" class="mb-2" :variant="isReady?'success':'secondary'" v-on:click="$router.push(voicerecord)">
@@ -73,11 +72,12 @@
             <div class="row justify-content-md-center fixed-bottom">
               <div class="col-md-auto" id="btn-submit">
                 <b-button @click="sendMsg()">Submit</b-button>
-                <!-- <b-button @click="merge()"> TEST MEGR</b-button>
+                <b-button @click="merge()"> TEST MEGR</b-button>
                 <b-button @click="forceUpdate()">FORCE UPDATE</b-button>
                 <b-button @click="gettext()">GET TEXT</b-button>
                 <b-button @click="red()">HIGHTLIGHT TEXT</b-button>
-                <b-button @click="getTestAudio()">getTestAudio</b-button> -->
+                <b-button @click="getTestAudio()">getTestAudio</b-button>
+                <b-button @click="getTestFeedback()"> FEED BACK</b-button>
               </div>
             </div>
 
@@ -185,6 +185,10 @@ export default {
     this.test = compo;
   },
     methods:{
+      getTestFeedback(){
+        this.axios.get('http://localhost:3000/feedback');
+      },
+
       getTestAudio(){
         this.axios.get('http://localhost:3000/test').then((res)=>{
           this.voicerecord = res.data.mp3[0].audioContent

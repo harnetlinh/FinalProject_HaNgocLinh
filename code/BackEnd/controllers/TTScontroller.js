@@ -11,7 +11,7 @@
   const request = {
     // The text to synthesize
     input: {
-         ssml: "<speak>The <say-as interpret-as='characters'> SSML </say-as>"
+         ssml: "<speak id='2' class='speak'>The <say-as id='3' class='say-as' interpret-as='characters'> SSML </say-as>"
         
         },
   
@@ -26,6 +26,7 @@
   
   
     exports.getAudio = (req,res)=>{
+      console.log(req);
         client.synthesizeSpeech(request)
         .then(async (response) => {
         console.log(response);
