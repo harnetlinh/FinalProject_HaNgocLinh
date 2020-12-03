@@ -398,8 +398,13 @@ export default {
           }
         }
       },
-      getTestFeedback(){
-        this.axios.get('http://localhost:3000/feedback');
+      async getTestFeedback(){
+        var res = await axios({
+          method: 'post',
+          url: 'http://localhost:3000/testnewfeedback',
+          data: {"data":["Bui Duc Duy test 3 from Nam Dep Trai","22-26 test 3 from Nam Dep Trai","Developer test 3 from Nam Dep Trai"]}
+        });
+        console.log(res);
       },
 
       getTestAudio(){
