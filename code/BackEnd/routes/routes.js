@@ -5,7 +5,7 @@ const SheetController = require("../controllers/SheetController.js");
 // router.get("/getMp3WihtTimestam",Controller.getMp3WihtTimestam);
 // router.get("/getOnlyMp3",Controller.getOnlyMP3);
 // router.post("/callbackurl",Controller.CallBackUrl);
-router.get("/test",Controller.getAudio)
+router.post("/test",Controller.getAudio)
 router.get("/feedback",ControllerFB.createTest)
 router.post("/testnewfeedback",SheetController.NewRow)
 module.exports = router;

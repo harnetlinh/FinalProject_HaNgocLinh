@@ -64,6 +64,20 @@
                   id="sel"
                   ref="dynamicDiv"
                   contenteditable="true"
+                  style="border:1px solid black;width: 100%;height: 100%;margin-bottom:10px" 
+                  >
+                </div>
+                <div
+                  id="sel"
+                  ref="dynamicDiv1"
+                  contenteditable="true"
+                  style="border:1px solid black;width: 100%;height: 100%;margin-bottom:10px" 
+                  >
+                </div>
+                <div
+                  id="sel"
+                  ref="dynamicDiv2"
+                  contenteditable="true"
                   style="border:1px solid black;width: 100%;height: 100%;" 
                   >
                 </div>
@@ -124,7 +138,9 @@
                         :options="optionsProsody"
                         stacked
                       ></b-form-radio-group>
+                      <span>pitch</span>
                       <b-form-input v-model="selectedSSML.valueOptionSSML.prosody.pitch" min="-50" max="50" type="range"></b-form-input>
+                      <span>volume</span>
                       <b-form-input v-model="selectedSSML.valueOptionSSML.prosody.volume" min="-50" max="50" type="range"></b-form-input>
                     </div>
                     <div v-if="selectedSSML.SSML == 'break'">
@@ -406,9 +422,52 @@ export default {
         });
         console.log(res);
       },
+      raw2RequestBody(){
+        var obj = {
+          "audioConfig": {
+            "audioEncoding": "MP3",
+          },
+          "input": {
+            "ssml": "<speak>" + this.$refs.dynamicDiv.innerHTML.toString() + "</speak>"
+          },
+          "voice": {
+            "languageCode": "en-US",
+            "name": "en-US-Wavenet-D"
+          }
+        }
+        var obj1 = {
+          "audioConfig": {
+            "audioEncoding": "MP3",
+          },
+          "input": {
+            "ssml": "<speak>" + this.$refs.dynamicDiv1.innerHTML.toString() + "</speak>"
+          },
+          "voice": {
+            "languageCode": "en-US",
+            "name": "en-US-Wavenet-F"
+          }
+        }
+        var obj2 = {
+          "audioConfig": {
+            "audioEncoding": "MP3",
+          },
+          "input": {
+            "ssml": "<speak>" + this.$refs.dynamicDiv2.innerHTML.toString() + "</speak>"
+          },
+          "voice": {
+            "languageCode": "en-US",
+            "name": "en-US-Wavenet-H"
+          }
+        }
 
-      getTestAudio(){
-        this.axios.get('http://localhost:3000/test').then((res)=>{
+        return [obj,obj1,obj2];
+      },
+
+      getTestAudio()
+      {
+        console.log(this.raw2RequestBody());
+        // console.log(this.$refs.dynamicDiv.innerHTML)
+        this.axios.post('http://localhost:3000/test',this.raw2RequestBody()).then((res)=>{
           this.voicerecord = res.data.mp3[0].audioContent
           console.log(res)
           let pause = play(this.voicerecord, {

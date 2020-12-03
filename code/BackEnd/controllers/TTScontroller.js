@@ -27,7 +27,7 @@
   
     exports.getAudio = (req,res)=>{
       console.log(req);
-        client.synthesizeSpeech(request)
+        client.synthesizeSpeech(req.body)
         .then(async (response) => {
         console.log(response);
         const audioContent = _.get(response[0], 'audioContent');
