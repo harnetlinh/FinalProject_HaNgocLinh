@@ -60,12 +60,16 @@
                 </b-form-checkbox>
               </b-col>
               <b-col sm="12">
-                <contenteditableDiv
-                  ref="contentEditableDiv"
-                  @transferObjFromContent="middleContent2Choice"
-                  @transferObjFromChoice="middleChoice2Content"
-                >
-                </contenteditableDiv>
+                <div
+                  id="sel"
+                  ref="dynamicDiv"
+                  contenteditable="true"
+                  style="border:1px solid black;width: 100%;height: 100%;" 
+                  >
+                </div>
+                <b-button @click="saveSelectionSSML()">SAVE SELECTION</b-button>
+                <b-button @click="restoreSelectionSSML()">RESTORE SELECTION</b-button>
+                <b-button @click="unSelectSSML()">RESET SELECTION</b-button>
               </b-col>
             </b-row>
             
@@ -75,9 +79,11 @@
                 <b-button @click="merge()"> TEST MEGR</b-button>
                 <b-button @click="forceUpdate()">FORCE UPDATE</b-button>
                 <b-button @click="gettext()">GET TEXT</b-button>
-                <b-button @click="red()">HIGHTLIGHT TEXT</b-button>
+                <b-button @click="addSSMLfromMain()">HIGHTLIGHT TEXT</b-button>
                 <b-button @click="getTestAudio()">getTestAudio</b-button>
                 <b-button @click="getTestFeedback()"> FEED BACK</b-button>
+                <b-button @click="addSSML()">addSSML</b-button>
+                <b-button @click="unwrapSSML_byID()"> test unwrap</b-button>
               </div>
             </div>
 
@@ -87,14 +93,51 @@
         <div class="col-lg-3 col-sm">
           <div class="card center-div overflow-auto" style="" >
               <b-col sm="15">
-                <!-- <ul style="list-style-type:none;">
-                  <li> -->
-                    <choiceSub ref="choiceSubComponent"
-                    @removechoiceSSML="removeSSMLbyID"
-                    @choosen="red"
-                    ></choiceSub>
-                  <!-- </li>
-                </ul> -->
+                    <b-form-radio-group
+                      id="radio-group-1"
+                      v-model="selectedSSML.SSML"
+                      :options="options"
+                      name="radio-inline"
+                      stacked
+                    ></b-form-radio-group>
+                    ------------------------
+                    <div v-if="selectedSSML.SSML == 'say_as'">
+                        {{selectedSSML.SSML}}
+                        <b-form-radio-group
+                        v-model="selectedSSML.valueOptionSSML.say_as.interpret_as"
+                        :options="optionsSayAs"
+                        stacked
+                      ></b-form-radio-group>
+                    </div>
+                    <div v-if="selectedSSML.SSML == 'emphasis'">
+                        {{selectedSSML.SSML}}
+                        <b-form-radio-group
+                        v-model="selectedSSML.valueOptionSSML.emphasis.level"
+                        :options="optionsEmphasis"
+                        stacked
+                      ></b-form-radio-group>
+                    </div>
+                    <div v-if="selectedSSML.SSML == 'prosody'">
+                        {{selectedSSML.SSML}}
+                        <b-form-radio-group
+                        v-model="selectedSSML.valueOptionSSML.prosody.rate"
+                        :options="optionsProsody"
+                        stacked
+                      ></b-form-radio-group>
+                      <b-form-input v-model="selectedSSML.valueOptionSSML.prosody.pitch" min="-50" max="50" type="range"></b-form-input>
+                      <b-form-input v-model="selectedSSML.valueOptionSSML.prosody.volume" min="-50" max="50" type="range"></b-form-input>
+                    </div>
+                    <div v-if="selectedSSML.SSML == 'break'">
+                        {{selectedSSML.SSML}}
+                        <b-form-radio-group
+                        v-model="selectedSSML.valueOptionSSML.break.strength"
+                        :options="optionsBreak"
+                        stacked
+                      ></b-form-radio-group>
+                      <b-form-input v-model="selectedSSML.valueOptionSSML.break.time" type="number"></b-form-input>
+                    </div>
+                    <!-- {{valueOptionSSML.prosody.pitch}} -->
+                  <!-- <b-button v-if="selectedSSML.SSML != ''" @click="onClickSave()">SAVE</b-button> -->
               </b-col>
           </div>
         </div>
@@ -135,6 +178,9 @@
 </template>
 
 <script>
+import construct from './lib/contruct'
+const constructorSSML = construct;
+import {saveSelection,restoreSelection} from './lib/storeSelection'
 import play from 'audio-play'
 import contenteditableDiv from './contentEditableDiv'
 import choiceSub from './choices/choiceSub'
@@ -157,6 +203,8 @@ export default {
     },
     data() {
       return {
+        selectedSSML_id:"",
+        windowSelectionValue:"",
         numID:1,
         valueSearch:"",
         box: false,
@@ -172,12 +220,69 @@ export default {
           {text:'noodle', style:"background-color:#fca88f"},
           {text:'soup', style:"background-color:#bbe4cb"},
           {text:'so', style:"background-color:#fff05e"},
-          // "whatever",
-          // {start: 2, end: 5, style:"background-color:#f330ff"}
+
         ],
         test:'',
       highlightEnabled: true,
-      choiceSSML:choiceSub
+      choiceSSML:choiceSub,
+      
+      selectedSSML:{
+        SSML:"",
+        valueOptionSSML:{
+        say_as:{
+          interpret_as:null
+        },
+        emphasis:{
+          level:null
+        },
+        prosody:{
+          rate:null,
+          pitch:null,
+          volume:null
+        },
+        break:{
+          time:null,
+          strength:null
+        },
+      },
+      
+      },
+      optionsBreak:[
+        {text: 'strong', value: 'strong'},
+        {text: 'medium', value: 'medium'},
+        {text: 'weak', value: 'weak'},
+        {text: 'none', value: ''},
+      ],
+      optionsProsody: [
+        {text: 'low', value: 'low'},
+        {text: 'medium', value: 'medium'},
+        {text: 'high', value: 'high'},
+        {text: 'none', value: ''},
+      ],
+      optionsEmphasis:[
+        {text: 'strong', value: 'strong'},
+        {text: 'moderate', value: 'moderate'},
+        {text: 'none', value: 'none'},
+        {text: 'reduced', value: 'reduced'},
+      ],
+      optionsSayAs:[
+        {text: 'cardinal', value: 'cardinal'},
+        {text: 'ordinal', value: 'ordinal'},
+        {text: 'characters', value: 'characters'},
+        {text: 'fraction', value: 'fraction'},
+        {text: 'expletive', value: 'expletive'},
+        {text: 'unit', value: 'unit'},
+        {text: 'verbatim', value: 'verbatim'},
+        {text: 'date', value: 'date'},
+        {text: 'time (hms12)', value: 'time'},
+        {text: 'telephone', value: 'telephone'}
+      ],
+      options: [
+          { text: 'say_as', value: 'say_as' },
+          { text: 'emphasis', value: 'emphasis' },
+          { text: 'prosody', value: 'prosody' },
+          { text: 'break', value: 'break' },
+        ]
       }
     },
     mounted() {
@@ -185,6 +290,114 @@ export default {
     this.test = compo;
   },
     methods:{
+      saveSelectionSSML(){
+        this.windowSelectionValue = saveSelection();
+      },
+      restoreSelectionSSML(){
+        restoreSelection(this.windowSelectionValue)
+      },
+      getSSMLChoice(){
+        let obj = {
+          SSML: this.selectedSSML.SSML,
+          attributes:{}
+        };
+        Object.keys(this.selectedSSML.valueOptionSSML[this.selectedSSML.SSML]).forEach(key => {
+          if(this.selectedSSML.valueOptionSSML[this.selectedSSML.SSML][key] !== null
+          && this.selectedSSML.valueOptionSSML[this.selectedSSML.SSML][key] !== undefined
+          && this.selectedSSML.valueOptionSSML[this.selectedSSML.SSML][key] !== ''
+          && this.selectedSSML.valueOptionSSML[this.selectedSSML.SSML][key] != 0)
+          {
+            obj.attributes[key] = this.selectedSSML.valueOptionSSML[this.selectedSSML.SSML][key];
+          }
+        });
+        return obj;
+      },
+      unwrapSSML_byID(){
+        document.getElementById(2).outerHTML = document.getElementById(2).innerHTML;
+      },
+      addSSML(){
+          var selectedChoice = this.getSSMLChoice();
+          console.log(selectedChoice);
+          this.choosenSSML = selectedChoice.SSML;
+          console.log(this.choosenSSML)
+            console.log("SSML")
+          // listKey.forEach(e => {
+            if(this.choosenSSML)
+            {
+              var tag = constructorSSML[selectedChoice.SSML].tag
+              var selection = this.windowSelectionValue;
+              console.log("nodeName "+window.getSelection().anchorNode.parentNode.nodeName)
+              console.log(selection)
+              if(window.getSelection().anchorNode.parentNode.nodeName === 'sel') //&& (!selection.extractContents().replace(/\s/g, '').length || selection.extractContents() === ""))
+              // window.getSelection().anchorNode.parentNode.nodeName === 'sel'
+              {
+                console.log("OKKKKKKKK")
+                let selectedText = selection.extractContents();
+                selection.insertNode("");
+              }else{
+                console.log("ELSE")
+                console.log(constructorSSML)
+                let selectedText = selection.extractContents();
+                let span = document.createElement(constructorSSML[this.choosenSSML].tag);
+                console.log(constructorSSML)
+                this.numID++;
+                span.setAttribute("id",this.numID)
+                this.$store.dispatch('ssml/pushSSML', {
+                  id:this.numID,
+                  windowSelection:this.windowSelectionValue,
+                  choiceSSML:selectedChoice
+                });
+                var _this = this;
+                span.onclick = function(){
+                  _this.getlistSSML(this.id)
+                }
+                Object.keys(selectedChoice.attributes).forEach(key=>{
+                  span.setAttribute(constructorSSML[selectedChoice.SSML].attributes[key].text,selectedChoice.attributes[key])
+                })
+                span.classList.add(constructorSSML[this.choosenSSML].class);
+                span.appendChild(selectedText);
+                selection.insertNode(span);
+                this.$emit("transferObjFromContent")
+                console.log(this.$store.getters.listSSML)
+              }
+            }else{
+              console.log("please choose a tag")
+            }
+      },
+      getlistSSML(id){
+        var one = this.$store.getters.listSSML.find(function(one){
+            return one.id == id
+        })
+        this.windowSelectionValue = one.windowSelection;
+        this.selectedSSML.SSML=one.choiceSSML.SSML;
+        Object.keys(one.choiceSSML.attributes).forEach(key=>{
+          this.selectedSSML.valueOptionSSML[one.choiceSSML.SSML][key] = one.choiceSSML.attributes[key];
+        });
+        this.restoreSelectionSSML();
+      },
+      unSelectSSML(){
+        this.windowSelectionValue = {};
+        this.selectedSSML = {
+            SSML:"",
+            valueOptionSSML:{
+            say_as:{
+              interpret_as:null
+            },
+            emphasis:{
+              level:null
+            },
+            prosody:{
+              rate:null,
+              pitch:null,
+              volume:null
+            },
+            break:{
+              time:null,
+              strength:null
+            },
+          }
+        }
+      },
       getTestFeedback(){
         this.axios.get('http://localhost:3000/feedback');
       },
@@ -223,26 +436,10 @@ export default {
           this.maker = maker; 
           this.engine = engine; 
       },
-      red(){
-        this.$refs.contentEditableDiv.addSSML();
-      },
-      middleContent2Choice(){
-        this.$refs.choiceSubComponent.getData()
-      },
-      middleChoice2Content(){
-        this.$refs.contentEditableDiv.getData()
-      },
-      gettext(){
-        this.$refs.contentEditableDiv.getContent();
-      },
-      removeSSMLbyID(){
-        this.$refs.contentEditableDiv.unwrapSSML_byID();
-      },
       sendMsg(){
         this.$bvModal.show('modal-spinner')
         axios.post(`http://c39a6c482a7a.ngrok.io/getOnlyMp3`,{
             text:this.msg
-            
         })
         .then(response => {
           this.voicerecord = response.data.mp3

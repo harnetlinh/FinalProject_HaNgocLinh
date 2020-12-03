@@ -108,11 +108,8 @@ export default {
       // },
       unwrapSSML_byID(){
         document.getElementById(this.$store.getters.currentID).outerHTML = document.getElementById(this.$store.getters.currentID).innerHTML;
-
       },
         addSSML(){
-          console.log(this.testSave)
-          // listKey = Object.keys(data)
           this.choosenSSML = this.$store.getters.choosenTag;
           console.log(this.choosenSSML)
             console.log("SSML")

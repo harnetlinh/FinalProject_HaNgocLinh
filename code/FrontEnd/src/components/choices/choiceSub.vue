@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-button :hidden="state" @click="remove()">{{value[0]}}</b-button>
-    <b-form-checkbox-group
+    <!-- <b-form-checkbox-group
       v-model="value"
       :options="options"
       :state="state"
@@ -9,8 +9,52 @@
       stacked
       name="checkbox-validation"
     >
-    </b-form-checkbox-group>
-    <b-button @click="onClickSave()">SAVE</b-button>
+    </b-form-checkbox-group> -->
+     <b-form-radio-group
+        id="radio-group-1"
+        v-model="selectedSSML"
+        :options="options"
+        name="radio-inline"
+        stacked
+      ></b-form-radio-group>
+      ------------------------
+      <div v-if="selectedSSML == 'say_as'">
+          {{selectedSSML}}
+          <b-form-radio-group
+          v-model="valueOptionSSML.say_as.interpret_as"
+          :options="optionsSayAs"
+          stacked
+        ></b-form-radio-group>
+      </div>
+      <div v-if="selectedSSML == 'emphasis'">
+          {{selectedSSML}}
+          <b-form-radio-group
+          v-model="valueOptionSSML.emphasis.level"
+          :options="optionsEmphasis"
+          stacked
+        ></b-form-radio-group>
+      </div>
+      <div v-if="selectedSSML == 'prosody'">
+          {{selectedSSML}}
+          <b-form-radio-group
+          v-model="valueOptionSSML.prosody.rate"
+          :options="optionsProsody"
+          stacked
+        ></b-form-radio-group>
+        <b-form-input v-model="valueOptionSSML.prosody.pitch" min="-50" max="50" type="range"></b-form-input>
+        <b-form-input v-model="valueOptionSSML.prosody.volume" min="-50" max="50" type="range"></b-form-input>
+      </div>
+      <div v-if="selectedSSML == 'break'">
+          {{selectedSSML}}
+          <b-form-radio-group
+          v-model="valueOptionSSML.break.strength"
+          :options="optionsBreak"
+          stacked
+        ></b-form-radio-group>
+        <b-form-input v-model="valueOptionSSML.break.time" type="number"></b-form-input>
+      </div>
+      {{valueOptionSSML.prosody.pitch}}
+    <b-button v-if="selectedSSML != ''" @click="onClickSave()">SAVE</b-button>
   </div>
 </template>
 
@@ -19,31 +63,63 @@ import construct from '../lib/contruct'
 export default {
   data(){
     return{
+      // selectedSSML:"",
       tempData:construct,
       totalSum : 0,
       value : [],
-      checkboxData:{
-        p:0,
-        paragraph:0,
-        say_as:0,
-        emphasis:0,
-        prosody:0,
-        break:0,
-        audio:0,
-        desc:0,
-        mark:0
+      selectedSSML:"",
+      valueOptionSSML:{
+        say_as:{
+          interpret_as:null
+        },
+        emphasis:{
+          level:null
+        },
+        prosody:{
+          rate:null,
+          pitch:null,
+          volume:null
+        },
+        break:{
+          time:null,
+          strength:null
+        },
       },
-      sum:0,
+      optionsBreak:[
+        {text: 'strong', value: 'strong'},
+        {text: 'medium', value: 'medium'},
+        {text: 'weak', value: 'weak'},
+        {text: 'none', value: ''},
+      ],
+      optionsProsody: [
+        {text: 'low', value: 'low'},
+        {text: 'medium', value: 'medium'},
+        {text: 'high', value: 'high'},
+        {text: 'none', value: ''},
+      ],
+      optionsEmphasis:[
+        {text: 'strong', value: 'strong'},
+        {text: 'moderate', value: 'moderate'},
+        {text: 'none', value: 'none'},
+        {text: 'reduced', value: 'reduced'},
+      ],
+      optionsSayAs:[
+        {text: 'cardinal', value: 'cardinal'},
+        {text: 'ordinal', value: 'ordinal'},
+        {text: 'characters', value: 'characters'},
+        {text: 'fraction', value: 'fraction'},
+        {text: 'expletive', value: 'expletive'},
+        {text: 'unit', value: 'unit'},
+        {text: 'verbatim', value: 'verbatim'},
+        {text: 'date', value: 'date'},
+        {text: 'time (hms12)', value: 'time'},
+        {text: 'telephone', value: 'telephone'}
+      ],
       options: [
-          { text: 'p', value: 'p' },
-          { text: 'paragraph', value: 'paragraph' },
           { text: 'say_as', value: 'say_as' },
           { text: 'emphasis', value: 'emphasis' },
           { text: 'prosody', value: 'prosody' },
           { text: 'break', value: 'break' },
-          { text: 'audio', value: 'audio' },
-          { text: 'desc', value: 'desc' },
-          { text: 'mark', value: 'mark' },
         ]
     }
   },
@@ -65,23 +141,25 @@ export default {
       },
   },
   methods:{
+    createObjChoice(){
+      return {
+        SSML: this.selectedSSML,
+        options: this.valueOptionSSML[this.selectedSSML]
+      }
+    },
     remove(){
       this.value = []
       this.$emit("removechoiceSSML");
 },
-    whatLL(){
-      console.log("OKKKKKKKK")
-    },
+
     assignData(){
-      this.checkboxData.p = this.$store.getters.listSSML[this.$store.getters.currentID].p.isActive;
-      this.checkboxData.paragraph = this.$store.getters.listSSML[this.$store.getters.currentID].paragraph.isActive;
-      this.checkboxData.say_as = this.$store.getters.listSSML[this.$store.getters.currentID].say_as.isActive;
-      this.checkboxData.emphasis = this.$store.getters.listSSML[this.$store.getters.currentID].emphasis.isActive;
-      this.checkboxData.prosody = this.$store.getters.listSSML[this.$store.getters.currentID].prosody.isActive;
-      this.checkboxData.break = this.$store.getters.listSSML[this.$store.getters.currentID].break.isActive;
-      this.checkboxData.audio = this.$store.getters.listSSML[this.$store.getters.currentID].audio.isActive;
-      this.checkboxData.desc = this.$store.getters.listSSML[this.$store.getters.currentID].desc.isActive;
-      this.checkboxData.mark = this.$store.getters.listSSML[this.$store.getters.currentID].mark.isActive;
+      for(var i = 0; i < 4; i++)
+      {
+        if(this.$store.getters.listSSML[this.$store.getters.currentID][this.options.value].isActive){
+          this.selectedSSML = this.options.value;
+          break;
+        }
+      }
     },
     getData(data){
       this.tempData = data
