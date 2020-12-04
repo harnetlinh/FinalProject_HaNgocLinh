@@ -46,58 +46,62 @@
       <div class="row">
 
         <div class="col-lg-9 col-sm">
-          <div class="card center-div" id="maker" ref="maker" >
+          <div class="card center-div overflow-auto" id="maker" ref="maker" >
             <center>
               <h4 id="title">Type your text here</h4>
             </center>
 
-            <b-row class="my-0">
-              <b-col sm="4">
-                <label for="textarea-auto-height">Turn on highlight Text</label>
+            <b-row class="my-0" v-for="i in currentBoxNumber" :key="i">
+              <b-col sm="1">
+                <span>Language</span>
+              </b-col>
+              <b-col sm="2">
+                <b-form-select required v-model="selectedLanguageCode" :options="optionsLanguageCode"></b-form-select>
               </b-col>
               <b-col sm="1">
-                <b-form-checkbox v-model="highlightEnabled" name="check-button" switch>
-                </b-form-checkbox>
+                <span>Voice</span>
+              </b-col>
+              <b-col sm="3">
+                <b-form-select required v-model="selectedVoiceCode" :options="optionsVoiceCode"></b-form-select>
               </b-col>
               <b-col sm="12">
                 <div
                   id="sel"
-                  ref="dynamicDiv"
+                  :ref="'dynamicDiv'+i"
                   contenteditable="true"
-                  style="border:1px solid black;width: 100%;height: 100%;margin-bottom:10px" 
                   >
                 </div>
-                <div
+                {{'dynamicDiv'+i}}
+                <!-- <div
                   id="sel"
                   ref="dynamicDiv1"
                   contenteditable="true"
-                  style="border:1px solid black;width: 100%;height: 100%;margin-bottom:10px" 
                   >
                 </div>
                 <div
                   id="sel"
                   ref="dynamicDiv2"
                   contenteditable="true"
-                  style="border:1px solid black;width: 100%;height: 100%;" 
                   >
-                </div>
-                <b-button @click="saveSelectionSSML()">SAVE SELECTION</b-button>
-                <b-button @click="restoreSelectionSSML()">RESTORE SELECTION</b-button>
-                <b-button @click="unSelectSSML()">RESET SELECTION</b-button>
+                </div> -->
+                
+              </b-col>
+            </b-row>
+            <b-row>
+              <b-col sm="4">
+                <b-button @click="addInputBox()">+</b-button>
               </b-col>
             </b-row>
             
+            
             <div class="row justify-content-md-center fixed-bottom">
               <div class="col-md-auto" id="btn-submit">
-                <b-button @click="sendMsg()">Submit</b-button>
-                <b-button @click="merge()"> TEST MEGR</b-button>
-                <b-button @click="forceUpdate()">FORCE UPDATE</b-button>
-                <b-button @click="gettext()">GET TEXT</b-button>
-                <b-button @click="addSSMLfromMain()">HIGHTLIGHT TEXT</b-button>
-                <b-button @click="getTestAudio()">getTestAudio</b-button>
-                <b-button @click="getTestFeedback()"> FEED BACK</b-button>
-                <b-button @click="addSSML()">addSSML</b-button>
-                <b-button @click="unwrapSSML_byID()"> test unwrap</b-button>
+                <b-button @click="saveSelectionSSML()">Save selection</b-button>
+                <b-button @click="restoreSelectionSSML()">Restore selection</b-button>
+                <b-button @click="unSelectSSML()">Reset selection</b-button>
+                <b-button @click="getTestAudio()">Get Audio file</b-button>
+                <b-button @click="addSSML()">Add SSML</b-button>
+                <b-button @click="unwrapSSML_byID()">Delete selected SSML</b-button>
               </div>
             </div>
 
@@ -217,8 +221,19 @@ export default {
       choiceSub,
       contenteditableDiv
     },
+    
     data() {
       return {
+        currentBoxNumber:1,
+        optionsLanguageCode:[
+          { value: 'en-GB', text: 'English (UK)' },
+          { value: 'en-US', text: 'English (US)' },
+          { value: 'vi-VN', text: 'Vietnamese (VN)' },
+          { value: 'ru-RU', text: 'Russian (Russia)' },
+        ],
+        optionsVoiceCode:[],
+        selectedLanguageCode:"",
+        selectedVoiceCode:"",
         selectedSSML_id:"",
         windowSelectionValue:"",
         numID:1,
@@ -298,7 +313,77 @@ export default {
           { text: 'emphasis', value: 'emphasis' },
           { text: 'prosody', value: 'prosody' },
           { text: 'break', value: 'break' },
-        ]
+        ],
+      }
+      
+    },
+    watch:{
+      selectedLanguageCode:function(newval,oldval){
+        switch(newval){
+          case 'en-GB':
+            this.optionsVoiceCode = [
+              { value: 'en-GB-Standard-A', text: 'en-GB A Standard Female' },
+              { value: 'en-GB-Standard-B', text: 'en-GB B Standard Male' },
+              { value: 'en-GB-Standard-C', text: 'en-GB C Standard Female' },
+              { value: 'en-GB-Standard-D', text: 'en-GB D Standard Male' },
+              { value: 'en-GB-Standard-F', text: 'en-GB F Standard Female' },
+              { value: 'en-GB-Wavenet-A', text: 'en-GB A Wavenet Female' },
+              { value: 'en-GB-Wavenet-B', text: 'en-GB B Wavenet Male' },
+              { value: 'en-GB-Wavenet-C', text: 'en-GB C Wavenet Female' },
+              { value: 'en-GB-Wavenet-D', text: 'en-GB D Wavenet Male' },
+              { value: 'en-GB-Wavenet-F', text: 'en-GB F Wavenet Female' },
+            ]
+            break;
+          case 'en-US':
+            this.optionsVoiceCode = [
+              { value: 'en-US-Standard-B', text: 'en-US B Standard Male' },
+              { value: 'en-US-Standard-C', text: 'en-US C Standard Female' },
+              { value: 'en-US-Standard-D', text: 'en-US D Standard Male' },
+              { value: 'en-US-Standard-E', text: 'en-US E Standard Female' },
+              { value: 'en-US-Standard-G', text: 'en-US G Standard Female' },
+              { value: 'en-US-Standard-H', text: 'en-US H Standard Female' },
+              { value: 'en-US-Standard-I', text: 'en-US I Standard Male' },
+              { value: 'en-US-Standard-J', text: 'en-US J Standard Male' },
+              { value: 'en-US-Wavenet-A', text: 'en-US A Wavenet Male' },
+              { value: 'en-US-Wavenet-B', text: 'en-US B Wavenet Male' },
+              { value: 'en-US-Wavenet-C', text: 'en-US C Wavenet Female' },
+              { value: 'en-US-Wavenet-D', text: 'en-US D Wavenet Male' },
+              { value: 'en-US-Wavenet-F', text: 'en-US F Wavenet Female' },
+              { value: 'en-US-Wavenet-G', text: 'en-US G Wavenet Female' },
+              { value: 'en-US-Wavenet-H', text: 'en-US H Wavenet Female' },
+              { value: 'en-US-Wavenet-I', text: 'en-US I Wavenet Male' },
+              { value: 'en-US-Wavenet-J', text: 'en-US J Wavenet Male' },
+            ]
+            break;
+          case 'vi-VN':
+            this.optionsVoiceCode = [
+              { value: 'vi-VN-Standard-A', text: 'vi-VN A Standard Female' },
+              { value: 'vi-VN-Standard-B', text: 'vi-VN B Standard Male' },
+              { value: 'vi-VN-Standard-C', text: 'vi-VN C Standard Female' },
+              { value: 'vi-VN-Standard-D', text: 'vi-VN D Standard Male' },
+              { value: 'vi-VN-Wavenet-A', text: 'vi-VN A Wavenet Female' },
+              { value: 'vi-VN-Wavenet-B', text: 'vi-VN B Wavenet Male' },
+              { value: 'vi-VN-Wavenet-C', text: 'vi-VN C Wavenet Female' },
+              { value: 'vi-VN-Wavenet-D', text: 'vi-VN D Wavenet Male' },
+            ]
+            break;
+          case 'ru-RU':
+            this.optionsVoiceCode = [
+              { value: 'ru-RU-Standard-A', text: 'ru-RU A Standard Female' },
+              { value: 'ru-RU-Standard-B', text: 'ru-RU B Standard Male' },
+              { value: 'ru-RU-Standard-C', text: 'ru-RU C Standard Female' },
+              { value: 'ru-RU-Standard-D', text: 'ru-RU D Standard Male' },
+              { value: 'ru-RU-Standard-E', text: 'ru-RU E Standard Female' },
+              { value: 'ru-RU-Wavenet-A', text: 'ru-RU A Wavenet Female' },
+              { value: 'ru-RU-Wavenet-B', text: 'ru-RU B Wavenet Male' },
+              { value: 'ru-RU-Wavenet-C', text: 'ru-RU C Wavenet Female' },
+              { value: 'ru-RU-Wavenet-D', text: 'ru-RU D Wavenet Male' },
+              { value: 'ru-RU-Wavenet-E', text: 'ru-RU E Wavenet Female' },
+            ]
+            break;
+          default:
+            this.optionsVoiceCode = [];
+        }
       }
     },
     mounted() {
@@ -306,6 +391,9 @@ export default {
     this.test = compo;
   },
     methods:{
+      addInputBox(){
+        this.currentBoxNumber++;
+      },
       saveSelectionSSML(){
         this.windowSelectionValue = saveSelection();
       },
@@ -423,44 +511,26 @@ export default {
         console.log(res);
       },
       raw2RequestBody(){
-        var obj = {
-          "audioConfig": {
-            "audioEncoding": "MP3",
-          },
-          "input": {
-            "ssml": "<speak>" + this.$refs.dynamicDiv.innerHTML.toString() + "</speak>"
-          },
-          "voice": {
-            "languageCode": "en-US",
-            "name": "en-US-Wavenet-D"
+        var arrayObj = [];
+        for(var i = 1; i <= this.currentBoxNumber; i++){
+          console.log('dynamicDiv'+i)
+          let refname = 'dynamicDiv'+i
+          console.log(this.$refs[refname][0].innerHTML)
+          let obj = {
+            "audioConfig": {
+              "audioEncoding": "MP3",
+            },
+            "input": {
+              "ssml": "<speak>" + this.$refs[refname][0].innerHTML + "</speak>"
+            },
+            "voice": {
+              "languageCode": "en-US",
+              "name": "en-US-Wavenet-D"
+            }
           }
+          arrayObj.push(obj);
         }
-        var obj1 = {
-          "audioConfig": {
-            "audioEncoding": "MP3",
-          },
-          "input": {
-            "ssml": "<speak>" + this.$refs.dynamicDiv1.innerHTML.toString() + "</speak>"
-          },
-          "voice": {
-            "languageCode": "en-US",
-            "name": "en-US-Wavenet-F"
-          }
-        }
-        var obj2 = {
-          "audioConfig": {
-            "audioEncoding": "MP3",
-          },
-          "input": {
-            "ssml": "<speak>" + this.$refs.dynamicDiv2.innerHTML.toString() + "</speak>"
-          },
-          "voice": {
-            "languageCode": "en-US",
-            "name": "en-US-Wavenet-H"
-          }
-        }
-
-        return [obj,obj1,obj2];
+        return arrayObj;
       },
 
       getTestAudio()

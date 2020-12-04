@@ -5,10 +5,17 @@
     outline: 0;
 }
 .center-div{
-    height: 50vh;
+    height: 70vh;
     /* overflow-y: scroll; */
 }
-
+#sel{
+    border:1px solid black;
+    width: 100%;
+    height: 100%;
+    margin-bottom:10px;
+    resize:vertical;
+    overflow:auto;
+}
 #qna {
     margin-top: 10px;
 }
