@@ -572,7 +572,6 @@ export default {
           console.log("OK");
           console.log(res)
           this.$bvModal.hide('modal-spinner')
-          
           this.voicerecord = res.data.url;
           var date =  new Date();
           this.listVoice.push({
@@ -611,7 +610,7 @@ export default {
         })
         .catch((res)=>{
           this.$bvModal.hide('modal-spinner')
-          if(res.status !== 200){
+          if(res.response.data.err.details){
             this.$bvModal.show('modal-error');
           }
           console.log(res.response.data.err);

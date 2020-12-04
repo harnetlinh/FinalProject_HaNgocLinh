@@ -35,7 +35,7 @@ var audioconcat = require('audioconcat');
         })
         .catch((err) => {
           console.error('ERROR:', err);
-          res.status(300).
+          res.status(300)
         });
       }
       });
