@@ -10,13 +10,13 @@ const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 var audioconcat = require('audioconcat');
     exports.getAudio = (req,res)=>{
-      const promise = new Promise((resolve,reject) => {
+      const promise = new Promise(async (resolve,reject) => {
       let count = 0;
       let list_file_mp3 = [];
-      req.body.forEach(request => {
-        client.synthesizeSpeech(request)
+      for (let index = 0; index < req.body.length; index++) {
+        await client.synthesizeSpeech(req.body[index])
         .then(async (response) => {
-        const audioContent = _.get(response[0], 'audioContent');
+        const audioContent = await _.get(response[0], 'audioContent');
     
         if (audioContent) {
             count++;
@@ -36,7 +36,7 @@ var audioconcat = require('audioconcat');
         .catch((err) => {
         console.error('ERROR:', err);
         });
-      });
+      }
       });
 
       promise.then((songs) => {
@@ -65,3 +65,8 @@ var audioconcat = require('audioconcat');
                 });
       }).catch(err => console.log(err));
     }
+
+  exports.Download = (req,res) => {
+    let file = './public/merged_file/' + req.params.id;
+    res.status(200).download(file);
+  }

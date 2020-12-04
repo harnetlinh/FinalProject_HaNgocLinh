@@ -8,4 +8,5 @@ const SheetController = require("../controllers/SheetController.js");
 router.post("/test",Controller.getAudio)
 router.get("/feedback",ControllerFB.createTest)
 router.post("/testnewfeedback",SheetController.NewRow)
+router.get("/download/:id",Controller.Download)
 module.exports = router;

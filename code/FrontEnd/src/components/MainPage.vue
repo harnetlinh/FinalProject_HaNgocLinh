@@ -4,37 +4,45 @@
       <div class="row">
 
           <div class="col-lg-5 col-sm">
-              <div class="card" id="search">
+              <div class="card" id="search" style="height:20vh; overflow:auto">
                 <center>
-                  <h4 id="title">Search text</h4>
-                  <b-container class="bv-example-row">
-                    <b-row>
-                      <b-col class="col-8"><b-form-input v-model="valueSearch" v-on:change="onChangedSearch()" type="text" debounce="500" placeholder="Search Text" id="keyword-input"></b-form-input></b-col>
-                      <b-col class="col-4"><b-button v-on:click="onChangedSearch(valueSearch)">Regex</b-button></b-col>
-                    </b-row>
-                  </b-container>
+                  <b-table-simple hover small caption-top responsive>
+                    <b-thead head-variant="light">
+                      <b-tr>
+                        <b-th>Download list</b-th>
+                        <b-th></b-th>
+                      </b-tr>
+                      <b-tbody style="width:40vw">
+                        <b-tr v-for="(row,index) in listVoice" :key="index" style="width:40vw">
+                          <b-td class="text-right">{{row.title}}</b-td>
+                          <b-td>
+                            <b-button size="h1" class="mb-2" :variant="isReady?'success':'secondary'" v-on:click="onclickDownload(row.title)">
+                              <b-icon icon="cloud-download" aria-hidden="true"></b-icon>
+                            </b-button>
+                          </b-td>
+                        </b-tr>
+                      </b-tbody>
+                    </b-thead>
+                  </b-table-simple>
                 </center>
               </div>
           </div>
           
           <div class="col-lg col-sm">
-              <div class="card" id="qoutes">
+              <div class="card" id="qoutes" style="height:20vh; overflow:auto">
                   <div class="card-body">
                       <div class="media align-items-center">
                           <div class="media-body">
                             <aplayer autoplay
+                              listMaxHeight="70px"
+                              :list="listVoice"
                               :music="{
                                 title: isReady?'READY TO HEAR':'NOT AVAILABLE',
-                                artist: 'FPT AI',
+                                artist: 'RubySmile',
                                 src: voicerecord,
-                                theme:isReady?'rgb(65, 184, 131)':'tomato'
+                                theme:isReady?'rgb(65, 184, 131)':'tomato',
                               }"
                             />
-                          </div>
-                          <div class="text-center" style="margin-left:20px">
-                              <b-button size="h1" class="mb-2" :variant="isReady?'success':'secondary'" v-on:click="$router.push(voicerecord)">
-                                <b-icon icon="cloud-download" aria-hidden="true"></b-icon>
-                              </b-button>
                           </div>
                       </div>
                   </div>
@@ -51,18 +59,18 @@
               <h4 id="title">Type your text here</h4>
             </center>
 
-            <b-row class="my-0" v-for="i in currentBoxNumber" :key="i">
+            <b-row class="my-0" v-for="i in currentBoxNumber" :key="i" style="padding-top:20px">
               <b-col sm="1">
                 <span>Language</span>
               </b-col>
               <b-col sm="2">
-                <b-form-select required v-model="selectedLanguageCode" :options="optionsLanguageCode"></b-form-select>
+                <b-form-select required v-model="selectedLanguageCode[i-1]" :options="optionsLanguageCode"></b-form-select>
               </b-col>
               <b-col sm="1">
                 <span>Voice</span>
               </b-col>
               <b-col sm="3">
-                <b-form-select required v-model="selectedVoiceCode" :options="optionsVoiceCode"></b-form-select>
+                <b-form-select required v-model="selectedVoiceCode[i-1]" :options="optionsVoiceCode[i-1]"></b-form-select>
               </b-col>
               <b-col sm="12">
                 <div
@@ -71,20 +79,6 @@
                   contenteditable="true"
                   >
                 </div>
-                {{'dynamicDiv'+i}}
-                <!-- <div
-                  id="sel"
-                  ref="dynamicDiv1"
-                  contenteditable="true"
-                  >
-                </div>
-                <div
-                  id="sel"
-                  ref="dynamicDiv2"
-                  contenteditable="true"
-                  >
-                </div> -->
-                
               </b-col>
             </b-row>
             <b-row>
@@ -92,8 +86,6 @@
                 <b-button @click="addInputBox()">+</b-button>
               </b-col>
             </b-row>
-            
-            
             <div class="row justify-content-md-center fixed-bottom">
               <div class="col-md-auto" id="btn-submit">
                 <b-button @click="saveSelectionSSML()">Save selection</b-button>
@@ -154,7 +146,8 @@
                         :options="optionsBreak"
                         stacked
                       ></b-form-radio-group>
-                      <b-form-input v-model="selectedSSML.valueOptionSSML.break.time" type="number"></b-form-input>
+                      <span>Time (ms/s)</span>
+                      <b-form-input v-model="selectedSSML.valueOptionSSML.break.time" type="text">ms</b-form-input>
                     </div>
                     <!-- {{valueOptionSSML.prosody.pitch}} -->
                   <!-- <b-button v-if="selectedSSML.SSML != ''" @click="onClickSave()">SAVE</b-button> -->
@@ -231,9 +224,10 @@ export default {
           { value: 'vi-VN', text: 'Vietnamese (VN)' },
           { value: 'ru-RU', text: 'Russian (Russia)' },
         ],
+        selectedSSML4Delete:"",
         optionsVoiceCode:[],
-        selectedLanguageCode:"",
-        selectedVoiceCode:"",
+        selectedLanguageCode:[],
+        selectedVoiceCode:[],
         selectedSSML_id:"",
         windowSelectionValue:"",
         numID:1,
@@ -241,6 +235,7 @@ export default {
         box: false,
         textSend: '',
         voicerecord:nullAudio,
+        listVoice:[],
         msg: '',
         ToChoice:{},
         isReady:false,
@@ -317,73 +312,87 @@ export default {
       }
       
     },
+    computed:{
+      allselectedLaguage(){
+        let str = "";
+        this.selectedLanguageCode.forEach(lang=>{
+          str+=lang;
+        });
+        return str;
+      }
+    },
     watch:{
-      selectedLanguageCode:function(newval,oldval){
-        switch(newval){
-          case 'en-GB':
-            this.optionsVoiceCode = [
-              { value: 'en-GB-Standard-A', text: 'en-GB A Standard Female' },
-              { value: 'en-GB-Standard-B', text: 'en-GB B Standard Male' },
-              { value: 'en-GB-Standard-C', text: 'en-GB C Standard Female' },
-              { value: 'en-GB-Standard-D', text: 'en-GB D Standard Male' },
-              { value: 'en-GB-Standard-F', text: 'en-GB F Standard Female' },
-              { value: 'en-GB-Wavenet-A', text: 'en-GB A Wavenet Female' },
-              { value: 'en-GB-Wavenet-B', text: 'en-GB B Wavenet Male' },
-              { value: 'en-GB-Wavenet-C', text: 'en-GB C Wavenet Female' },
-              { value: 'en-GB-Wavenet-D', text: 'en-GB D Wavenet Male' },
-              { value: 'en-GB-Wavenet-F', text: 'en-GB F Wavenet Female' },
-            ]
-            break;
-          case 'en-US':
-            this.optionsVoiceCode = [
-              { value: 'en-US-Standard-B', text: 'en-US B Standard Male' },
-              { value: 'en-US-Standard-C', text: 'en-US C Standard Female' },
-              { value: 'en-US-Standard-D', text: 'en-US D Standard Male' },
-              { value: 'en-US-Standard-E', text: 'en-US E Standard Female' },
-              { value: 'en-US-Standard-G', text: 'en-US G Standard Female' },
-              { value: 'en-US-Standard-H', text: 'en-US H Standard Female' },
-              { value: 'en-US-Standard-I', text: 'en-US I Standard Male' },
-              { value: 'en-US-Standard-J', text: 'en-US J Standard Male' },
-              { value: 'en-US-Wavenet-A', text: 'en-US A Wavenet Male' },
-              { value: 'en-US-Wavenet-B', text: 'en-US B Wavenet Male' },
-              { value: 'en-US-Wavenet-C', text: 'en-US C Wavenet Female' },
-              { value: 'en-US-Wavenet-D', text: 'en-US D Wavenet Male' },
-              { value: 'en-US-Wavenet-F', text: 'en-US F Wavenet Female' },
-              { value: 'en-US-Wavenet-G', text: 'en-US G Wavenet Female' },
-              { value: 'en-US-Wavenet-H', text: 'en-US H Wavenet Female' },
-              { value: 'en-US-Wavenet-I', text: 'en-US I Wavenet Male' },
-              { value: 'en-US-Wavenet-J', text: 'en-US J Wavenet Male' },
-            ]
-            break;
-          case 'vi-VN':
-            this.optionsVoiceCode = [
-              { value: 'vi-VN-Standard-A', text: 'vi-VN A Standard Female' },
-              { value: 'vi-VN-Standard-B', text: 'vi-VN B Standard Male' },
-              { value: 'vi-VN-Standard-C', text: 'vi-VN C Standard Female' },
-              { value: 'vi-VN-Standard-D', text: 'vi-VN D Standard Male' },
-              { value: 'vi-VN-Wavenet-A', text: 'vi-VN A Wavenet Female' },
-              { value: 'vi-VN-Wavenet-B', text: 'vi-VN B Wavenet Male' },
-              { value: 'vi-VN-Wavenet-C', text: 'vi-VN C Wavenet Female' },
-              { value: 'vi-VN-Wavenet-D', text: 'vi-VN D Wavenet Male' },
-            ]
-            break;
-          case 'ru-RU':
-            this.optionsVoiceCode = [
-              { value: 'ru-RU-Standard-A', text: 'ru-RU A Standard Female' },
-              { value: 'ru-RU-Standard-B', text: 'ru-RU B Standard Male' },
-              { value: 'ru-RU-Standard-C', text: 'ru-RU C Standard Female' },
-              { value: 'ru-RU-Standard-D', text: 'ru-RU D Standard Male' },
-              { value: 'ru-RU-Standard-E', text: 'ru-RU E Standard Female' },
-              { value: 'ru-RU-Wavenet-A', text: 'ru-RU A Wavenet Female' },
-              { value: 'ru-RU-Wavenet-B', text: 'ru-RU B Wavenet Male' },
-              { value: 'ru-RU-Wavenet-C', text: 'ru-RU C Wavenet Female' },
-              { value: 'ru-RU-Wavenet-D', text: 'ru-RU D Wavenet Male' },
-              { value: 'ru-RU-Wavenet-E', text: 'ru-RU E Wavenet Female' },
-            ]
-            break;
-          default:
-            this.optionsVoiceCode = [];
+      allselectedLaguage:function(newval,oldval){
+        console.log(this.selectedLanguageCode)
+        for(let i = 0; i < this.selectedLanguageCode.length; i++){
+           switch(this.selectedLanguageCode[i]){
+            case 'en-GB':
+              this.optionsVoiceCode[i] = [
+                { value: 'en-GB-Standard-A', text: 'en-GB A Standard Female' },
+                { value: 'en-GB-Standard-B', text: 'en-GB B Standard Male' },
+                { value: 'en-GB-Standard-C', text: 'en-GB C Standard Female' },
+                { value: 'en-GB-Standard-D', text: 'en-GB D Standard Male' },
+                { value: 'en-GB-Standard-F', text: 'en-GB F Standard Female' },
+                { value: 'en-GB-Wavenet-A', text: 'en-GB A Wavenet Female' },
+                { value: 'en-GB-Wavenet-B', text: 'en-GB B Wavenet Male' },
+                { value: 'en-GB-Wavenet-C', text: 'en-GB C Wavenet Female' },
+                { value: 'en-GB-Wavenet-D', text: 'en-GB D Wavenet Male' },
+                { value: 'en-GB-Wavenet-F', text: 'en-GB F Wavenet Female' },
+              ]
+              break;
+            case 'en-US':
+              this.optionsVoiceCode[i] = [
+                { value: 'en-US-Standard-B', text: 'en-US B Standard Male' },
+                { value: 'en-US-Standard-C', text: 'en-US C Standard Female' },
+                { value: 'en-US-Standard-D', text: 'en-US D Standard Male' },
+                { value: 'en-US-Standard-E', text: 'en-US E Standard Female' },
+                { value: 'en-US-Standard-G', text: 'en-US G Standard Female' },
+                { value: 'en-US-Standard-H', text: 'en-US H Standard Female' },
+                { value: 'en-US-Standard-I', text: 'en-US I Standard Male' },
+                { value: 'en-US-Standard-J', text: 'en-US J Standard Male' },
+                { value: 'en-US-Wavenet-A', text: 'en-US A Wavenet Male' },
+                { value: 'en-US-Wavenet-B', text: 'en-US B Wavenet Male' },
+                { value: 'en-US-Wavenet-C', text: 'en-US C Wavenet Female' },
+                { value: 'en-US-Wavenet-D', text: 'en-US D Wavenet Male' },
+                { value: 'en-US-Wavenet-F', text: 'en-US F Wavenet Female' },
+                { value: 'en-US-Wavenet-G', text: 'en-US G Wavenet Female' },
+                { value: 'en-US-Wavenet-H', text: 'en-US H Wavenet Female' },
+                { value: 'en-US-Wavenet-I', text: 'en-US I Wavenet Male' },
+                { value: 'en-US-Wavenet-J', text: 'en-US J Wavenet Male' },
+              ]
+              break;
+            case 'vi-VN':
+              this.optionsVoiceCode[i] = [
+                { value: 'vi-VN-Standard-A', text: 'vi-VN A Standard Female' },
+                { value: 'vi-VN-Standard-B', text: 'vi-VN B Standard Male' },
+                { value: 'vi-VN-Standard-C', text: 'vi-VN C Standard Female' },
+                { value: 'vi-VN-Standard-D', text: 'vi-VN D Standard Male' },
+                { value: 'vi-VN-Wavenet-A', text: 'vi-VN A Wavenet Female' },
+                { value: 'vi-VN-Wavenet-B', text: 'vi-VN B Wavenet Male' },
+                { value: 'vi-VN-Wavenet-C', text: 'vi-VN C Wavenet Female' },
+                { value: 'vi-VN-Wavenet-D', text: 'vi-VN D Wavenet Male' },
+              ]
+              break;
+            case 'ru-RU':
+              this.optionsVoiceCode[i] = [
+                { value: 'ru-RU-Standard-A', text: 'ru-RU A Standard Female' },
+                { value: 'ru-RU-Standard-B', text: 'ru-RU B Standard Male' },
+                { value: 'ru-RU-Standard-C', text: 'ru-RU C Standard Female' },
+                { value: 'ru-RU-Standard-D', text: 'ru-RU D Standard Male' },
+                { value: 'ru-RU-Standard-E', text: 'ru-RU E Standard Female' },
+                { value: 'ru-RU-Wavenet-A', text: 'ru-RU A Wavenet Female' },
+                { value: 'ru-RU-Wavenet-B', text: 'ru-RU B Wavenet Male' },
+                { value: 'ru-RU-Wavenet-C', text: 'ru-RU C Wavenet Female' },
+                { value: 'ru-RU-Wavenet-D', text: 'ru-RU D Wavenet Male' },
+                { value: 'ru-RU-Wavenet-E', text: 'ru-RU E Wavenet Female' },
+              ]
+              break;
+            default:
+              this.optionsVoiceCode[i] = [];
+          }
+          console.log(this.optionsVoiceCode);
         }
+       
       }
     },
     mounted() {
@@ -391,8 +400,14 @@ export default {
     this.test = compo;
   },
     methods:{
+      onclickDownload(url){
+        window.open('http://localhost:3000/download/'+ url);
+      },
       addInputBox(){
         this.currentBoxNumber++;
+        this.selectedVoiceCode.push([]);
+        this.selectedLanguageCode.push([]);
+        this.optionsVoiceCode.push([]);
       },
       saveSelectionSSML(){
         this.windowSelectionValue = saveSelection();
@@ -416,9 +431,11 @@ export default {
         });
         return obj;
       },
+      
       unwrapSSML_byID(){
-        document.getElementById(2).outerHTML = document.getElementById(2).innerHTML;
+        document.getElementById(this.selectedSSML4Delete).outerHTML = document.getElementById(this.selectedSSML4Delete).innerHTML;
       },
+      
       addSSML(){
           var selectedChoice = this.getSSMLChoice();
           console.log(selectedChoice);
@@ -469,6 +486,7 @@ export default {
             }
       },
       getlistSSML(id){
+        this.selectedSSML4Delete = id;
         var one = this.$store.getters.listSSML.find(function(one){
             return one.id == id
         })
@@ -512,6 +530,10 @@ export default {
       },
       raw2RequestBody(){
         var arrayObj = [];
+        const searchRegExp2 = /&nbsp;/g;
+        const searchRegExp1 = /><\/break>/g;
+        const replaceWith1 = '/>';  
+        const replaceWith2 = ''; 
         for(var i = 1; i <= this.currentBoxNumber; i++){
           console.log('dynamicDiv'+i)
           let refname = 'dynamicDiv'+i
@@ -521,15 +543,16 @@ export default {
               "audioEncoding": "MP3",
             },
             "input": {
-              "ssml": "<speak>" + this.$refs[refname][0].innerHTML + "</speak>"
+              "ssml": "<speak>" + this.$refs[refname][0].innerHTML.replace(searchRegExp1, replaceWith1).replace(searchRegExp2, replaceWith2) + "</speak>"
             },
             "voice": {
-              "languageCode": "en-US",
-              "name": "en-US-Wavenet-D"
+              "languageCode": this.selectedLanguageCode[i-1],
+              "name": this.selectedVoiceCode[i-1]
             }
           }
           arrayObj.push(obj);
         }
+        console.log(arrayObj);
         return arrayObj;
       },
 
@@ -538,8 +561,17 @@ export default {
         console.log(this.raw2RequestBody());
         // console.log(this.$refs.dynamicDiv.innerHTML)
         this.axios.post('http://localhost:3000/test',this.raw2RequestBody()).then((res)=>{
-          this.voicerecord = res.data.mp3[0].audioContent
           console.log(res)
+          this.voicerecord = res.data.url;
+          this.listVoice.push({
+                                title: this.voicerecord.substring(this.voicerecord.lastIndexOf('/') + 1),
+                                artist: 'RubySmile',
+                                src: this.voicerecord,
+                                theme:'rgb(65, 184, 131)',
+                                
+                              })
+          console.log(res)
+          
           let pause = play(this.voicerecord, {
           //start/end time, can be negative to measure from the end
           start: 0,
@@ -570,20 +602,20 @@ export default {
           this.maker = maker; 
           this.engine = engine; 
       },
-      sendMsg(){
-        this.$bvModal.show('modal-spinner')
-        axios.post(`http://c39a6c482a7a.ngrok.io/getOnlyMp3`,{
-            text:this.msg
-        })
-        .then(response => {
-          this.voicerecord = response.data.mp3
-          this.isReady = true
-          this.$bvModal.hide('modal-spinner')
-        })
-        .catch(e => {
-          this.errors.push(e)
-        })
-      },
+      // sendMsg(){
+      //   this.$bvModal.show('modal-spinner')
+      //   axios.post(`http://c39a6c482a7a.ngrok.io/getOnlyMp3`,{
+      //       text:this.msg
+      //   })
+      //   .then(response => {
+      //     this.voicerecord = response.data.mp3
+      //     this.isReady = true
+      //     this.$bvModal.hide('modal-spinner')
+      //   })
+      //   .catch(e => {
+      //     this.errors.push(e)
+      //   })
+      // },
       getSelectionText() {
           document.getElementById("sel").textContent
           let text = window.getSelection().toString();

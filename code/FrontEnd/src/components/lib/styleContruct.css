@@ -1,15 +1,17 @@
 .say_as{
-    color:green;
+    background-color:rgb(119, 238, 119);
 }
 .emphasis{
-    color:yellow;
+    background-color:rgb(240, 240, 108);
 }
 .prosody{
-    color:blue
+    background-color:rgb(84, 84, 209)
 }
 .break{
     color: red;
-    background-color: red;
+    background-color: rgb(252, 102, 102);
+    padding-left: 10px;
+    fill:rgb(0,0,255);stroke-width:3;stroke:rgb(0,0,0)
 }
 .audio{
     color:blueviolet;
