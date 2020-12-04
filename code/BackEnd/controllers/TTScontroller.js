@@ -34,7 +34,8 @@ var audioconcat = require('audioconcat');
         }
         })
         .catch((err) => {
-        console.error('ERROR:', err);
+          console.error('ERROR:', err);
+          res.status(300).
         });
       }
       });
@@ -63,7 +64,13 @@ var audioconcat = require('audioconcat');
                     "url": "http://localhost:3000/mp3/" + file_name.replace('./public/merged_file/','')
                   });
                 });
-      }).catch(err => console.log(err));
+      }).catch(err => 
+        {
+          res.status(500).json({
+            "message":"error"
+          });
+          console.log(err)}
+      );
     }
 
   exports.Download = (req,res) => {

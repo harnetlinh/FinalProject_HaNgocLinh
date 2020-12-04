@@ -14,11 +14,9 @@
 
             <!-- Right aligned nav items -->
             <b-navbar-nav class="ml-auto">
+                <b-button style="margin-right:30px" @click="$router.push('/dashboard/feedback')">Feedback</b-button>
                 <b-nav-item-dropdown right>
-                
-
                     <template v-slot:button-content>
-                        <b-button style="margin-right:30px">Feedback</b-button>
                         <i class="icofont-ui-user"></i>
                     </template>
                     <b-dropdown-item href="#"><i class="icofont-tools"></i> Settings</b-dropdown-item>

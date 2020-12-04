@@ -14,6 +14,7 @@
                       </b-tr>
                       <b-tbody style="width:40vw">
                         <b-tr v-for="(row,index) in listVoice" :key="index" style="width:40vw">
+                          <b-td>{{row.date}}</b-td>
                           <b-td class="text-right">{{row.title}}</b-td>
                           <b-td>
                             <b-button size="h1" class="mb-2" :variant="isReady?'success':'secondary'" v-on:click="onclickDownload(row.title)">
@@ -60,17 +61,17 @@
             </center>
 
             <b-row class="my-0" v-for="i in currentBoxNumber" :key="i" style="padding-top:20px">
-              <b-col sm="1">
+              <b-col sm="2">
                 <span>Language</span>
               </b-col>
               <b-col sm="2">
-                <b-form-select required v-model="selectedLanguageCode[i-1]" :options="optionsLanguageCode"></b-form-select>
+                <b-form-select :state="getValidationState(selectedLanguageCode[i-1])" required v-model="selectedLanguageCode[i-1]" :options="optionsLanguageCode"></b-form-select>
               </b-col>
-              <b-col sm="1">
+              <b-col sm="2">
                 <span>Voice</span>
               </b-col>
               <b-col sm="3">
-                <b-form-select required v-model="selectedVoiceCode[i-1]" :options="optionsVoiceCode[i-1]"></b-form-select>
+                <b-form-select :state="getValidationState(selectedVoiceCode[i-1])" required v-model="selectedVoiceCode[i-1]" :options="optionsVoiceCode[i-1]"></b-form-select>
               </b-col>
               <b-col sm="12">
                 <div
@@ -134,10 +135,10 @@
                         :options="optionsProsody"
                         stacked
                       ></b-form-radio-group>
-                      <span>pitch</span>
+                      <span>pitch {{selectedSSML.valueOptionSSML.prosody.pitch}}</span>
                       <b-form-input v-model="selectedSSML.valueOptionSSML.prosody.pitch" min="-50" max="50" type="range"></b-form-input>
-                      <span>volume</span>
-                      <b-form-input v-model="selectedSSML.valueOptionSSML.prosody.volume" min="-50" max="50" type="range"></b-form-input>
+                      <span>volume {{selectedSSML.valueOptionSSML.prosody.volume}}</span>
+                      <b-form-input v-model="selectedSSML.valueOptionSSML.prosody.volume" min="0" max="100" type="range"></b-form-input>
                     </div>
                     <div v-if="selectedSSML.SSML == 'break'">
                         {{selectedSSML.SSML}}
@@ -186,6 +187,12 @@
         <b-spinner label="Loading..."></b-spinner>
       </div>
     </b-modal>
+    <b-modal id="modal-error" title="BootstrapVue" hide-footer hide-header >
+      <div>
+        Error
+        {{responseErrorDetail}}
+      </div>
+    </b-modal>
     
   </div>
 </template>
@@ -217,6 +224,7 @@ export default {
     
     data() {
       return {
+        responseErrorDetail:"",
         currentBoxNumber:1,
         optionsLanguageCode:[
           { value: 'en-GB', text: 'English (UK)' },
@@ -400,6 +408,11 @@ export default {
     this.test = compo;
   },
     methods:{
+      getValidationState(value){
+        if(value !== null && value !== "" && value !== undefined && value !== '' && value != [] && value.length !== 0){
+          return true;
+        }else return false;
+      },
       onclickDownload(url){
         window.open('http://localhost:3000/download/'+ url);
       },
@@ -520,14 +533,6 @@ export default {
           }
         }
       },
-      async getTestFeedback(){
-        var res = await axios({
-          method: 'post',
-          url: 'http://localhost:3000/testnewfeedback',
-          data: {"data":["Bui Duc Duy test 3 from Nam Dep Trai","22-26 test 3 from Nam Dep Trai","Developer test 3 from Nam Dep Trai"]}
-        });
-        console.log(res);
-      },
       raw2RequestBody(){
         var arrayObj = [];
         const searchRegExp2 = /&nbsp;/g;
@@ -558,12 +563,20 @@ export default {
 
       getTestAudio()
       {
+        this.$bvModal.show('modal-spinner');
+        console.log("HERE")
+        console.log(this.$refs.dynamicDiv1[0])
         console.log(this.raw2RequestBody());
         // console.log(this.$refs.dynamicDiv.innerHTML)
         this.axios.post('http://localhost:3000/test',this.raw2RequestBody()).then((res)=>{
+          console.log("OK");
           console.log(res)
+          this.$bvModal.hide('modal-spinner')
+          
           this.voicerecord = res.data.url;
+          var date =  new Date();
           this.listVoice.push({
+                                date: date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(),
                                 title: this.voicerecord.substring(this.voicerecord.lastIndexOf('/') + 1),
                                 artist: 'RubySmile',
                                 src: this.voicerecord,
@@ -596,52 +609,20 @@ export default {
           autoplay: true
         },);
         })
+        .catch((res)=>{
+          this.$bvModal.hide('modal-spinner')
+          if(res.status !== 200){
+            this.$bvModal.show('modal-error');
+          }
+          console.log(res.response.data.err);
+          this.responseErrorDetail = res.response.data.err.details;
+        })
       },
       objSSML(id,maker,engine){ 
           this.id = id; 
           this.maker = maker; 
           this.engine = engine; 
       },
-      // sendMsg(){
-      //   this.$bvModal.show('modal-spinner')
-      //   axios.post(`http://c39a6c482a7a.ngrok.io/getOnlyMp3`,{
-      //       text:this.msg
-      //   })
-      //   .then(response => {
-      //     this.voicerecord = response.data.mp3
-      //     this.isReady = true
-      //     this.$bvModal.hide('modal-spinner')
-      //   })
-      //   .catch(e => {
-      //     this.errors.push(e)
-      //   })
-      // },
-      getSelectionText() {
-          document.getElementById("sel").textContent
-          let text = window.getSelection().toString();
-        return text;
-    },
-    merge(){
-      audio
-          .fetchAudio("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/thrust.mp3", "http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/thrust.mp3")
-          .then(buffers => {
-            // => [AudioBuffer, AudioBuffer]
-            audio.mergeAudio(buffers);
-          })
-          .then(merged => {
-            // => AudioBuffer
-            audio.export(merged, "audio/mp3");
-          })
-          .then(output => {
-            // => {blob, element, url}
-            audio.download(output.blob);
-            document.append(output.element);
-            console.log(output.url);
-          })
-          .catch(error => {
-            // => Error Message
-          });
-    }
     }
 }
 </script>
